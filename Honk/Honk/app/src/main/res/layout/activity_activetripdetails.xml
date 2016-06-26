@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+    android:layout_height="match_parent" android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:background="@color/lightMain"
+    tools:context="com.example.teamhonk.honk.controllers.ViewTripActivity">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Trip Details"
+        android:id="@+id/titleView"
+        android:textStyle="bold"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:textSize="40sp"
+        android:textColor="@color/darkMain"
+        />
+
+    <Space
+        android:layout_width="1dp"
+        android:layout_height="30dp"/>
+
+    <TextView
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="Destination:"
+        android:textStyle="bold"
+        android:textSize="25sp"
+        android:id="@+id/destinationTitleView"
+        android:layout_marginTop="33dp"
+        android:layout_below="@+id/titleView"
+        android:layout_toLeftOf="@+id/titleView"
+        android:layout_toStartOf="@+id/titleView" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="25sp"
+        android:id="@+id/destinationView"
+        android:layout_alignTop="@+id/destinationTitleView"
+        android:layout_toRightOf="@+id/titleView"
+        android:layout_toEndOf="@+id/titleView" />
+
+    <TextView
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:textSize="25sp"
+        android:text="Time:"
+        android:textStyle="bold"
+        android:id="@+id/timeTitleView"
+        android:layout_marginTop="48dp"
+        android:layout_toLeftOf="@+id/titleView"
+        android:layout_toStartOf="@+id/titleView"
+        android:layout_below="@+id/destinationTitleView" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="25sp"
+        android:id="@+id/timeView"
+        android:layout_alignTop="@+id/timeTitleView"
+        android:layout_alignLeft="@+id/destinationView"
+        android:layout_alignStart="@+id/destinationView" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="30sp"
+        android:textColor="@color/darkMain"
+        android:text="ETA"
+        android:textStyle="bold"
+        android:id="@+id/etaTitleView"
+        android:layout_below="@+id/timeTitleView"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="35dp" />
+
+    <ListView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@color/lightMain"
+        android:id="@+id/etaList"
+        android:layout_below="@+id/etaTitleView"
+        android:layout_centerHorizontal="true" />
+
+</RelativeLayout>

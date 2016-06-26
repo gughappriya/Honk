@@ -1,0 +1,351 @@
+Index: app/src/main/AndroidManifest.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/AndroidManifest.xml	(revision 1b11a1cd812d7342f44cf006ae9b85f9180cda96)
++++ app/src/main/AndroidManifest.xml	(revision )
+@@ -17,7 +17,9 @@
+     <uses-permission android:name="android.permission.GET_ACCOUNTS" />
+     <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
+     <uses-permission android:name="android.permission.READ_CONTACTS" />
++    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+ 
++
+     <!--
+       IMPORTANT: Change "com.parse.starter.permission.C2D_MESSAGE" in the lines below
+       to match your app's package name + ".permission.C2D_MESSAGE".
+@@ -104,6 +106,14 @@
+         </activity>
+ 
+         <service android:name="com.parse.PushService" />
++        <service android:name=".helperclasses.HonkLocationUpdateService"></service>
++        <receiver android:name=".helperclasses.ServiceStarter">
++            <intent-filter>
++                <action android:name="android.intent.action.BOOT_COMPLETED"/>
++            </intent-filter>
++        </receiver>
++
++
+ 
+         <receiver
+             android:name="com.parse.ParsePushBroadcastReceiver"
+Index: app/src/main/java/com/example/teamhonk/honk/helperclasses/ServiceStarter.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/com/example/teamhonk/honk/helperclasses/ServiceStarter.java	(revision )
++++ app/src/main/java/com/example/teamhonk/honk/helperclasses/ServiceStarter.java	(revision )
+@@ -0,0 +1,31 @@
++package com.example.teamhonk.honk.helperclasses;
++
++import android.content.BroadcastReceiver;
++import android.content.Context;
++import android.content.Intent;
++import android.util.Log;
++
++import com.example.teamhonk.honk.contracts.IDatabaseManager;
++import com.facebook.FacebookSdk;
++import com.parse.ParseFacebookUtils;
++
++/**
++ * Created by Gughappriya Gnanasekar on 12/5/2015.
++ */
++public class ServiceStarter extends BroadcastReceiver {
++
++    @Override
++    public void onReceive(Context context, Intent intent) {
++
++        IDatabaseManager dbManager = new ParseManager();
++        //Parse should be initialized before calling facebook utils of parse
++        dbManager.initialize(context);
++        //Parse facebook utils is initialized
++
++        Intent i = new Intent(context,HonkLocationUpdateService.class);
++
++       // i.setClass(context, HonkLocationUpdateService.class);
++        //HonkLocationUpdateService.setServiceAlarm(context,false);
++        Log.d("StartService", "ServiceStarted");
++    }
++}
+Index: app/src/main/java/com/example/teamhonk/honk/controllers/MainActivity.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/com/example/teamhonk/honk/controllers/MainActivity.java	(revision 1b11a1cd812d7342f44cf006ae9b85f9180cda96)
++++ app/src/main/java/com/example/teamhonk/honk/controllers/MainActivity.java	(revision )
+@@ -62,13 +62,14 @@
+     @Override
+     protected void onCreate(Bundle savedInstanceState) {
+         super.onCreate(savedInstanceState);
++
++//        //Set the view
+-        FacebookSdk.sdkInitialize(getApplicationContext());
+-        IDatabaseManager dbManager = new ParseManager();
++FacebookSdk.sdkInitialize(getApplicationContext());
++       IDatabaseManager dbManager = new ParseManager();
+-        //Parse should be initialized before calling facebook utils of parse
++//        //Parse should be initialized before calling facebook utils of parse
+-        dbManager.initialize(this);
++       dbManager.initialize(this);
+-        //Parse facebook utils is initialized
++//        //Parse facebook utils is initialized
+         ParseFacebookUtils.initialize(getApplicationContext());
+-        //Set the view
+         setContentView(R.layout.activity_main);
+ 
+         //make the login functional
+Index: app/src/main/java/com/example/teamhonk/honk/helperclasses/HonkLocationUpdateService.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/com/example/teamhonk/honk/helperclasses/HonkLocationUpdateService.java	(revision )
++++ app/src/main/java/com/example/teamhonk/honk/helperclasses/HonkLocationUpdateService.java	(revision )
+@@ -0,0 +1,244 @@
++package com.example.teamhonk.honk.helperclasses;
++
++import android.app.AlarmManager;
++import android.app.AlertDialog;
++import android.app.IntentService;
++import android.app.PendingIntent;
++import android.app.Service;
++import android.content.Context;
++import android.content.DialogInterface;
++import android.content.Intent;
++import android.location.Location;
++import android.location.LocationListener;
++import android.location.LocationManager;
++import android.os.Bundle;
++import android.os.IBinder;
++import android.provider.Settings;
++import android.util.Log;
++import android.widget.Toast;
++
++import javax.xml.datatype.Duration;
++
++/**
++ * Created by Gughappriya Gnanasekar on 12/5/2015.
++ */
++public class HonkLocationUpdateService extends IntentService implements  LocationListener {
++
++    private  Context mContext = null;
++
++    // flag for GPS status
++    boolean isGPSEnabled = false;
++
++    // flag for network status
++    boolean isNetworkEnabled = false;
++
++    // flag for GPS status
++    boolean canGetLocation = false;
++
++    Location location; // location
++    double latitude; // latitude
++    double longitude; // longitude
++
++    // The minimum distance to change Updates in meters
++    private static final long MIN_DISTANCE_CHANGE_FOR_UPDATES = 0; // 10 meters
++
++    // The minimum time between updates in milliseconds
++    private static final long MIN_TIME_BW_UPDATES = 1000 * 60 * 1; // 1 minute
++    private static final int POLL_INTERVAL = 1000*15;
++
++    // Declaring a Location Manager
++    protected LocationManager locationManager;
++
++    public HonkLocationUpdateService() {
++        super("HonkLocationUpdateService");
++        mContext = getBaseContext();
++
++    }
++
++    @Override
++    protected void onHandleIntent(Intent intent) {
++
++        getLocation();
++    }
++
++    public static void setServiceAlarm(Context context, boolean isOn){
++
++        Intent i = new Intent(context, HonkLocationUpdateService.class);
++        PendingIntent pi = PendingIntent.getService(context, 0, i, 0);
++
++        AlarmManager alarmManager = (AlarmManager)
++                context.getSystemService(Context.ALARM_SERVICE);
++
++        if(isOn) {
++            alarmManager.setRepeating(AlarmManager.RTC,
++                    System.currentTimeMillis(), POLL_INTERVAL, pi);
++        } else {
++            alarmManager.cancel(pi);
++            pi.cancel();
++        }
++    }
++
++
++
++
++    public Location getLocation() {
++        try {
++            locationManager = (LocationManager) mContext
++                    .getSystemService(LOCATION_SERVICE);
++
++            // getting GPS status
++            isGPSEnabled = locationManager
++                    .isProviderEnabled(LocationManager.GPS_PROVIDER);
++
++            // getting network status
++            isNetworkEnabled = locationManager
++                    .isProviderEnabled(LocationManager.NETWORK_PROVIDER);
++
++            if (!isGPSEnabled && !isNetworkEnabled) {
++                // no network provider is enabled
++                Log.d("NONET","Sorry no network enabled");
++            } else {
++                this.canGetLocation = true;
++                // First get location from Network Provider
++                if (isNetworkEnabled) {
++                    Log.d("NET","Net enabled");
++                    locationManager.requestLocationUpdates(
++                            LocationManager.NETWORK_PROVIDER,
++                            MIN_TIME_BW_UPDATES,
++                            MIN_DISTANCE_CHANGE_FOR_UPDATES, this);
++                    Log.d("Network", "Network");
++                    if (locationManager != null) {
++                        location = locationManager
++                                .getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
++                        if (location != null) {
++                            latitude = location.getLatitude();
++                            longitude = location.getLongitude();
++                        }
++                    }
++                }
++                // if GPS Enabled get lat/long using GPS Services
++                if (isGPSEnabled) {
++                    Log.d("GPS:","GPS enabled");
++                    if (location == null) {
++                        Log.d("UPDATE:","GPS UPDATE SENT enabled");
++                        locationManager.requestLocationUpdates(
++                                LocationManager.GPS_PROVIDER,
++                                MIN_TIME_BW_UPDATES,
++                                MIN_DISTANCE_CHANGE_FOR_UPDATES, this);
++                        Log.d("GPS Enabled", "GPS Enabled");
++                        if (locationManager != null) {
++                            location = locationManager
++                                    .getLastKnownLocation(LocationManager.GPS_PROVIDER);
++                            if (location != null) {
++                                latitude = location.getLatitude();
++                                longitude = location.getLongitude();
++                            }
++                        }
++                    }
++                }
++            }
++
++        } catch (Exception e) {
++            e.printStackTrace();
++        }
++
++        return location;
++    }
++
++    /**
++     * Stop using GPS listener
++     * Calling this function will stop using GPS in your app
++     * */
++    public void stopUsingGPS(){
++        if(locationManager != null){
++            locationManager.removeUpdates(HonkLocationUpdateService.this);
++        }
++    }
++
++    /**
++     * Function to get latitude
++     * */
++    public double getLatitude(){
++        if(location != null){
++            latitude = location.getLatitude();
++        }
++
++        // return latitude
++        return latitude;
++    }
++
++    /**
++     * Function to get longitude
++     * */
++    public double getLongitude(){
++        if(location != null){
++            longitude = location.getLongitude();
++        }
++
++        // return longitude
++        return longitude;
++    }
++
++    /**
++     * Function to check GPS/wifi enabled
++     * @return boolean
++     * */
++    public boolean canGetLocation() {
++        return this.canGetLocation;
++    }
++
++    /**
++     * Function to show settings alert dialog
++     * On pressing Settings button will lauch Settings Options
++     * */
++    public void showSettingsAlert(){
++        AlertDialog.Builder alertDialog = new AlertDialog.Builder(mContext);
++
++        // Setting Dialog Title
++        alertDialog.setTitle("GPS is settings");
++
++        // Setting Dialog Message
++        alertDialog.setMessage("GPS is not enabled. Do you want to go to settings menu?");
++
++        // On pressing Settings button
++        alertDialog.setPositiveButton("Settings", new DialogInterface.OnClickListener() {
++            public void onClick(DialogInterface dialog,int which) {
++                Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
++                mContext.startActivity(intent);
++            }
++        });
++
++        // on pressing cancel button
++        alertDialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
++            public void onClick(DialogInterface dialog, int which) {
++                dialog.cancel();
++            }
++        });
++
++        // Showing Alert Message
++        alertDialog.show();
++    }
++
++    @Override
++    public void onLocationChanged(Location location) {
++       Log.d("LOC_Changed",location.getLatitude()+","+location.getLongitude());
++    }
++
++    @Override
++    public void onProviderDisabled(String provider) {
++    }
++
++    @Override
++    public void onProviderEnabled(String provider) {
++    }
++
++    @Override
++    public void onStatusChanged(String provider, int status, Bundle extras) {
++    }
++
++    @Override
++    public IBinder onBind(Intent arg0) {
++        return null;
++    }
++
++}

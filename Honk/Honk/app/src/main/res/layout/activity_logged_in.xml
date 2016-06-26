@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:background="@color/lightMain">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:id="@+id/welcomeView"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="37dp"
+        android:textSize="40sp"
+        android:textColor="@color/darkMain"
+        android:gravity="center"/>
+
+    <Button
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Create Trip"
+        android:id="@+id/createTripBtn"
+        android:layout_below="@+id/welcomeView"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="71dp"
+        android:padding="10dp"
+        android:textSize="25sp"
+        android:textColor="@color/White"
+        android:background="@color/darkMain"/>
+
+    <Button
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="My Trips"
+        android:id="@+id/myTripsBtn"
+        android:padding="10dp"
+        android:textSize="25sp"
+        android:background="@color/darkMain"
+        android:textColor="@color/white"
+        android:layout_centerVertical="true"
+        android:layout_alignRight="@+id/createTripBtn"
+        android:layout_alignEnd="@+id/createTripBtn"
+        android:layout_alignLeft="@+id/createTripBtn"
+        android:layout_alignStart="@+id/createTripBtn" />
+</RelativeLayout>
